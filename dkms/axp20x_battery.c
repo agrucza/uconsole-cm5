@@ -38,6 +38,7 @@
 #define AXP717_PWR_STATUS_BAT_CHRG 1
 #define AXP717_PWR_STATUS_BAT_DISCHRG 2
 
+#define AXP20X_PWR_OP_BATT_CHARGING BIT(6)
 #define AXP20X_PWR_OP_BATT_PRESENT BIT(5)
 #define AXP20X_PWR_OP_BATT_ACTIVATED BIT(3)
 #define AXP717_PWR_OP_BATT_PRESENT BIT(3)
@@ -302,7 +303,29 @@ static int axp20x_battery_get_prop(struct power_supply *psy,
 			return ret;
 
 		if (reg & AXP20X_PWR_STATUS_BAT_CHARGING) {
-			val->intval = POWER_SUPPLY_STATUS_CHARGING;
+			/*
+			 * This bit only reports the direction of the battery
+			 * current. After the charger has terminated, a residual
+			 * current of a few mA keeps flowing into the battery, so
+			 * the bit stays set and the status would read "charging"
+			 * forever. The charger's own "in charging" flag in
+			 * PWR_OP_MODE tells whether a charge is really going on;
+			 * when it is clear with current still flowing in, the
+			 * charge has finished, unless the chip is trickling a
+			 * deeply discharged cell in activation mode.
+			 */
+			ret = regmap_read(axp20x_batt->regmap,
+					  AXP20X_PWR_OP_MODE, &val1);
+			if (ret)
+				return ret;
+
+			if (val1 & AXP20X_PWR_OP_BATT_CHARGING)
+				val->intval = POWER_SUPPLY_STATUS_CHARGING;
+			else if (val1 & AXP20X_PWR_OP_BATT_ACTIVATED)
+				/* activation trickle into a deeply discharged cell */
+				val->intval = POWER_SUPPLY_STATUS_CHARGING;
+			else
+				val->intval = POWER_SUPPLY_STATUS_FULL;
 			return 0;
 		}
 
