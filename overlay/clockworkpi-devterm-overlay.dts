@@ -24,6 +24,8 @@
 	fragment@1 {
 		target = <&spi4>;
 		__overlay__ {
+			#address-cells = <1>;
+			#size-cells = <0>;
 			pinctrl-names = "default";
 			pinctrl-0 = <&spi4_pins &spi4_cs_pins>;
 			cs-gpios = <&gpio 4 1>;
@@ -173,7 +175,7 @@
 	fragment@8 {
 		target-path = "/";
 		__overlay__  {
-			battery: battery@0 {
+			battery: battery {
 				compatible = "simple-battery";
 				device-chemistry = "lithium-ion";
 				constant-charge-current-max-microamp = <2100000>;
@@ -224,7 +226,7 @@
 	fragment@10 {
 		target-path = "/";
 		__overlay__  {
-			ocp8178_backlight: backlight@0 {
+			ocp8178_backlight: backlight {
 				compatible = "ocp8178-backlight";
 				backlight-control-gpios = <&gpio 9 0>;
 				default-brightness = <5>;
