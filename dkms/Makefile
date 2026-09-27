@@ -8,3 +8,6 @@ obj-m += axp20x_adc.o
 obj-m += snd-soc-simple-amplifier.o
 snd-soc-simple-amplifier-y := simple-amplifier.o
 obj-m += axp20x-pek.o
+obj-m += panel-cwd686.o
+obj-m += axp20x_ac_power.o
+obj-m += ti-adc081c.o
